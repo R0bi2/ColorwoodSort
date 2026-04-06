@@ -19,21 +19,22 @@ package de.htwg.se.colorwoodSort
  * Merksatz: Alles Komplexe ist nur Kombination dieser 10.
  */
 
+enum Color:
+  case R, G, Y, B
+
+case class ColorBlock(color: Color) // nicht zwingend nötig
+case class Pipe(capacity: Int = 1, content: List[Color] = Nil)
+case class GameState(pipes: Vector[Pipe])
+
 object colorwoodSort {
+
+  val eol = "\n"
+
   def main(args: Array[String]): Unit = {
 
     print(printPipes(3, 3, 3))
   }
 }
-
-val eol = "\n"
-enum Color { case R, G, B, Y };
-
-case class ColorBlock(color: Color) // nicht zwingend nötig
-
-case class Pipe(capacity: Int = 1, content: List[Color] = Nil)
-
-case class GameState(pipes: Vector[Pipe])
 
 //handle over the game state or blocks does not care about empty or full pipes so better check the pipes
 //valid: colors match || Pipe empty, unvalid: colors dont match || pipe is full

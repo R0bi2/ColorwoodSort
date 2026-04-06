@@ -2,7 +2,8 @@ val x = 2
 
 2 + x
 
-enum Color { case R, G, B, Y }
+enum Color:
+  case R, G, Y, B
 //case class ColorBlock(color: Color)
 
 case class Pipe(capacity: Int = 1, content: List[Color] = Nil) //old list type ColorBlock
