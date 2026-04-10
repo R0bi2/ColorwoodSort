@@ -118,3 +118,8 @@ def printPipes(pipeCount: Int, height: Int, width: Int): String =
   val body = wallLine * height
   val bottomLine = ("+" + "-" * width + "+" + "  ") * pipeCount + "\n"
   "\n\n" + body + bottomLine
+
+
+/**
+  * Causing a Merge Conflict
+*/
