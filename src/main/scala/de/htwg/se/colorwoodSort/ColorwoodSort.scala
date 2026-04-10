@@ -50,8 +50,8 @@ def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean = {
 
 }
 
-/** change Gamestate by moving Blocks from pipe from to pipe to there are more Blocks of the same color beneath the selected then they are
-  * selected as well
+/** change Gamestate by moving Blocks from pipe 'fromPipe' to pipe 'toPipe' if there are more Blocks of the same color beneath the selected
+  * then they are selected as well
   *
   * How do I adress pipes? I dont have any Gamestate structure yet
   */
@@ -61,7 +61,7 @@ def move(state: GameState, from: Int, to: Int): GameState = {
 
   if (isValid(fromPipe, toPipe)) {
 
-    topColor(fromPipe) match
+    topColor(fromPipe) match // match is like 'if' but continues with called function return parameter
       case Some(color) =>
 
         // select blocks to move and determine how many can be moved
@@ -73,7 +73,7 @@ def move(state: GameState, from: Int, to: Int): GameState = {
         // update pipes
         val tmp = selected.take(amount)
         val fromPipe2 = Pipe(fromPipe.capacity, fromPipe.content.dropRight(amount))
-        val toPipe2 = Pipe(toPipe.capacity, toPipe.content ++ tmp.reverse)
+        val toPipe2 = Pipe(toPipe.capacity, toPipe.content ++ tmp.reverse) // why tmp.reverse
 
         // new GameState
         val newPipes = state.pipes.updated(from, fromPipe2).updated(to, toPipe2)
@@ -113,13 +113,42 @@ def printPipe(height: Int = 2, width: Int = 1): String =
   val bottom = "+" + "-" * width + "+\n"
   body + bottom
 
-def printPipes(pipeCount: Int, height: Int, width: Int): String =
-  val wallLine = ("|" + " " * width + "|" + "  ") * pipeCount + "\n"
-  val body = wallLine * height
-  val bottomLine = ("+" + "-" * width + "+" + "  ") * pipeCount + "\n"
-  "\n\n" + body + bottomLine
+/** should functions be entirely scalable? it doesnt make sense for the game to make a pipe wider than 1
+  *
+  * @param pipeCount
+  * @param height
+  * @param width
+  * @return
+  */
+def printPipes(pipeCount: Int, height: Int, width: Int = 1, symbol: Char = ' '): String =
+  if (pipeCount <= 0 || height <= 0 || width <= 0) "\n\nInvalid dimensions for pipes.\n"
+  else {
+    val left = width / 2 - 1
+    val right = width / 2 - 1 - left
+    val filling = " " * left + symbol + " " * right
+    val singleWall = "|" + filling + "|"
+    val singleBottom = "+" + "-" * width + "+"
 
+    var wallLine = ""
+    var bottomLine = ""
 
-/**
-  * Causing a Merge Conflict
-*/
+    var i = 0
+    while (i < pipeCount) {
+      wallLine += singleWall
+      bottomLine += singleBottom
+
+      if (i < pipeCount - 1) { // only between pipes, not after the last one
+        wallLine += "  "
+        bottomLine += "  "
+      }
+
+      i += 1
+    }
+
+    wallLine += "\n"
+    bottomLine += "\n"
+
+    val body = wallLine * height
+
+    "\n\n" + body + bottomLine
+  }

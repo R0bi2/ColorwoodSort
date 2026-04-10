@@ -31,3 +31,48 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       topColor(p2) should be(None)
     }
   }
+
+  "move" should {
+    "move blocks from one pipe to another if valid" in {
+      val p1 = Pipe(3, List(Color.G, Color.G))
+      val p2 = Pipe(3, Nil)
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      move(gamestate, 0, 1) should be(
+        GameState(Vector(Pipe(3, Nil), Pipe(3, List(Color.G, Color.G))))
+      )
+    }
+
+    "printPipes" should {
+
+      "return a message if one of the parameters is smaller or equal to 0" in {
+        printPipes(-1, 3, 3) should be("\n\nInvalid dimensions for pipes.\n")
+        printPipes(3, -1, 3) should be("\n\nInvalid dimensions for pipes.\n")
+        printPipes(3, 3, -1) should be("\n\nInvalid dimensions for pipes.\n")
+      }
+      "return a string with the given dimensions" in {
+        printPipes(2, 3, 4) should be(
+          "\n\n" +
+            "|    |  |    |\n" +
+            "|    |  |    |\n" +
+            "|    |  |    |\n" +
+            "+----+  +----+\n"
+        )
+      }
+      "print a given symbol in the middle (the placed ColorBlock)" in {
+        printPipes(1, 1, 1, 'X') should be(
+          "\n\n" +
+            "|X|\n" +
+            "+-+\n"
+        )
+        printPipes(1, 3, 3, 'X') should be(
+          "\n\n" +
+            "| X |\n" +
+            "| X |\n" +
+            "| X |\n" +
+            "+---+\n"
+        )
+      }
+    }
+  }
