@@ -47,3 +47,28 @@ metals.sbt
 #ScalaTest reports
 test-reports/
 
+# Logs
+logs/              # Ordner mit Laufzeit- und Debug-Logs (z. B. von Programmen oder sbt)
+*.log              # Einzelne Logdateien mit Ausgaben/Fehlerprotokollen
+
+# Temporary files
+tmp/               # Temporäre Arbeitsdateien/Ordner, die nur kurzzeitig existieren
+*.tmp              # Einzelne temporäre Dateien (Zwischenspeicher)
+
+# Compiled class files
+*.class            # Kompilierter Bytecode von Java/Scala (Ergebnis des Builds)
+
+# ScalaTest reports
+test-reports/      # Testergebnis-Berichte (z. B. von automatisierten Tests)
+
+# Coverage reports
+coverage/          # Code-Coverage-Auswertung (welcher Code wurde getestet)
+.coverage/         # Versteckter Coverage-Ordner (Tool-spezifisch)
+.coverage.*        # Weitere Coverage-Dateien (z. B. verschiedene Runs)
+
+# Dependency caches
+lib_managed/       # Von sbt heruntergeladene/verwaltete Bibliotheken
+src_managed/       # Automatisch generierter Source-Code (z. B. durch Plugins)
+
+# bash
+bash.exe.stackdump # Crash-Dump von Git Bash/Windows bei Abstürzen
