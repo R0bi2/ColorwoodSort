@@ -23,3 +23,14 @@ val pipe = state.pipes(1)
 val newContent = pipe.content.updated(1, Color.G)
 val newPipe = pipe.copy(content = newContent)
 val state2 = state.copy(pipes = state.pipes.updated(1, newPipe))
+
+def printPipes(pipeCount: Int, height: Int, width: Int): String =
+  if (pipeCount <= 0 || height <= 0 || width <= 0) "\n\nInvalid dimensions for pipes.\n"
+  else {
+    val wallLine = ("|" + " " * width + "|" + "  ") * pipeCount + "\n"
+    val body = wallLine * height
+    val bottomLine = ("+" + "-" * width + "+" + "  ") * pipeCount + "\n"
+    "\n\n" + body + bottomLine
+  }
+
+printPipes(4, 4, 3)
