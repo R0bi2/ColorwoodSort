@@ -23,9 +23,19 @@ enum Color:
   case R, G, Y, B
 
 case class ColorBlock(color: Color) // nicht zwingend nötig
-case class Pipe(capacity: Int = 1, content: List[Color] = Nil)
+
+//old
+//case class Pipe(capacity: Int = 1, content: List[Color] = Nil)
+
+case class Pipe(capacity: Int = 1, content: List[Color] = Nil) {
+  require(capacity > 0, "capacity must be > 0")
+  require(content.size <= capacity, "too many elements")
+}
+
 case class GameState(pipes: Vector[Pipe])
 
+/** main method to run the game
+  */
 object colorwoodSort {
 
   val eol = "\n"

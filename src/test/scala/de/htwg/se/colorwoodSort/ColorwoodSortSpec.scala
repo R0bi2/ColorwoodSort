@@ -8,16 +8,89 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
     printPipe() should be("+   +\n" + ("|   |" + "\n") * 3 + "+---+\n")
   }
 
-  "isFull should return true if topmost element reaches capacity" in {
-    val p1 = Pipe(2, List(Color.G, Color.Y))
-    isFull(p1) should be(true)
+  "case class pipe" should {
+    "be created with valid parameters" in {
+      val p1 = Pipe(3, List(Color.R, Color.G, Color.Y))
+      p1.capacity should be(3)
+      p1.content should be(List(Color.R, Color.G, Color.Y))
+    }
+
+    "throw exception if capacity is 0" in {
+      assertThrows[IllegalArgumentException] {
+        Pipe(0, Nil)
+      }
+    }
+
+    "throw exception if content exceeds capacity" in {
+      assertThrows[IllegalArgumentException] {
+        Pipe(3, List(Color.R, Color.G, Color.Y, Color.B))
+      }
+    }
   }
 
-  "isValid should return false if colors do not match" in {
-    val p1 = Pipe(2, List(Color.G, Color.Y))
-    val p2 = Pipe(2, List(Color.G, Color.G))
+  "isFull" should {
+    "return true if topmost element reaches capacity" in {
+      val p1 = Pipe(2, List(Color.G, Color.Y))
+      isFull(p1) should be(true)
+    }
 
-    isValid(p1, p2) should be(false)
+    "return true if empty pipe has capacity 0" in { // Do I want this? It is technically full, but it is also empty. Maybe I should just not allow pipes with capacity 0?
+      val p2 = Pipe(0, Nil)
+      isFull(p2) should be(true)
+    }
+
+    "return false if topmost element does not reach capacity" in {
+      val p2 = Pipe(3, List(Color.G, Color.Y))
+      isFull(p2) should be(false)
+    }
+
+    "return false if pipe is empty" in {
+      val p3 = Pipe(3, Nil)
+      isFull(p3) should be(false)
+    }
+
+    "return false if pipe has more elements than capacity" in { // Maybe I should just not allow pipes with more elements than capacity?
+      val p4 = Pipe(2, List(Color.G, Color.Y, Color.R))
+      isFull(p4) should be(false)
+    }
+  }
+
+  "isValid" should {
+    "return false if colors do not match" in {
+      val p1 = Pipe(2, List(Color.G, Color.Y))
+      val p2 = Pipe(2, List(Color.G, Color.G))
+
+      isValid(p1, p2) should be(false)
+    }
+
+    "return false if fromPipe is empty" in {
+      val p1 = Pipe(2, Nil)
+      val p2 = Pipe(2, List(Color.G, Color.G))
+
+      isValid(p1, p2) should be(false)
+    }
+
+    "return false if toPipe is full" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.G, Color.G))
+
+      isValid(p1, p2) should be(false)
+    }
+
+    "return true if colors match and toPipe is not full" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.G))
+
+      isValid(p1, p2) should be(true)
+    }
+
+    "return true if toPipe is empty" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, Nil)
+
+      isValid(p1, p2) should be(true)
+    }
+
   }
 
   "topColor should" should {
@@ -42,6 +115,20 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       move(gamestate, 0, 1) should be(
         GameState(Vector(Pipe(3, Nil), Pipe(3, List(Color.G, Color.G))))
       )
+
+      "move" should {
+        "not move blocks if invalid" in {
+          val p1 = Pipe(3, List(Color.G, Color.G))
+          val p2 = Pipe(3, List(Color.R))
+
+          val gamestate = GameState(Vector(p1, p2))
+
+          move(gamestate, 0, 1) should be(
+            GameState(Vector(Pipe(3, List(Color.G, Color.G)), Pipe(3, List(Color.R))))
+          )
+        }
+      }
+
     }
 
     "printPipes" should {
