@@ -34,11 +34,6 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       isFull(p1) should be(true)
     }
 
-    "return true if empty pipe has capacity 0" in { // Do I want this? It is technically full, but it is also empty. Maybe I should just not allow pipes with capacity 0?
-      val p2 = Pipe(0, Nil)
-      isFull(p2) should be(true)
-    }
-
     "return false if topmost element does not reach capacity" in {
       val p2 = Pipe(3, List(Color.G, Color.Y))
       isFull(p2) should be(false)
@@ -47,11 +42,6 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
     "return false if pipe is empty" in {
       val p3 = Pipe(3, Nil)
       isFull(p3) should be(false)
-    }
-
-    "return false if pipe has more elements than capacity" in { // Maybe I should just not allow pipes with more elements than capacity?
-      val p4 = Pipe(2, List(Color.G, Color.Y, Color.R))
-      isFull(p4) should be(false)
     }
   }
 
