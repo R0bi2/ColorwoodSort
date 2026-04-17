@@ -3,6 +3,9 @@ package de.htwg.se.colorwoodSort
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
+//coverage report: D:\SE\colorwoodsort-se_SS_2026\target\scala-3.8.2\scoverage-report
+//sbt clean coverage test coverageReport
+
 class ColorwoodSortSpec extends AnyWordSpec with Matchers:
 
   "ColorwoodSort should have a Pipe as current default printPipe output" in {
@@ -18,6 +21,12 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       val p1 = Pipe(3, List(Color.R, Color.G, Color.Y))
       p1.capacity should be(3)
       p1.content should be(List(Color.R, Color.G, Color.Y))
+    }
+
+    "be correctly created with default parameters" in {
+      val p2 = Pipe()
+      p2.capacity should be(1)
+      p2.content should be(Nil)
     }
 
     "throw exception if capacity is 0" in {

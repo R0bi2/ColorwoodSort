@@ -89,7 +89,7 @@ def move(state: GameState, from: Int, to: Int): GameState = {
         val newPipes = state.pipes.updated(from, fromPipe2).updated(to, toPipe2)
         GameState(newPipes)
 
-      case None => state
+      case None => state // unnecessary because isValid already checks if fromPipe is empty
 
   } else state
 
@@ -130,7 +130,7 @@ def printPipe(height: Int = 2, width: Int = 1): String =
   * @param width
   * @return
   */
-def printPipes(pipeCount: Int, height: Int, width: Int = 1, symbol: Char = ' '): String =
+def printPipes(pipeCount: Int, height: Int, width: Int, symbol: Char = ' '): String =
   if (pipeCount <= 0 || height <= 0 || width <= 0) "\n\nInvalid dimensions for pipes.\n"
   else {
     val filling =
