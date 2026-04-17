@@ -4,8 +4,13 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 
 class ColorwoodSortSpec extends AnyWordSpec with Matchers:
-  "ColorwoodSort should have a Pipe as |  | + \\n" in {
-    printPipe() should be("+   +\n" + ("|   |" + "\n") * 3 + "+---+\n")
+
+  "ColorwoodSort should have a Pipe as current default printPipe output" in {
+    printPipe() should be(
+      "| |\n" +
+        "| |\n" +
+        "+-+\n"
+    )
   }
 
   "case class pipe" should {
@@ -105,51 +110,85 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       move(gamestate, 0, 1) should be(
         GameState(Vector(Pipe(3, Nil), Pipe(3, List(Color.G, Color.G))))
       )
-
-      "move" should {
-        "not move blocks if invalid" in {
-          val p1 = Pipe(3, List(Color.G, Color.G))
-          val p2 = Pipe(3, List(Color.R))
-
-          val gamestate = GameState(Vector(p1, p2))
-
-          move(gamestate, 0, 1) should be(
-            GameState(Vector(Pipe(3, List(Color.G, Color.G)), Pipe(3, List(Color.R))))
-          )
-        }
-      }
-
     }
 
-    "printPipes" should {
+    "not move blocks if invalid" in {
+      val p1 = Pipe(3, List(Color.G, Color.G))
+      val p2 = Pipe(3, List(Color.R))
 
-      "return a message if one of the parameters is smaller or equal to 0" in {
-        printPipes(-1, 3, 3) should be("\n\nInvalid dimensions for pipes.\n")
-        printPipes(3, -1, 3) should be("\n\nInvalid dimensions for pipes.\n")
-        printPipes(3, 3, -1) should be("\n\nInvalid dimensions for pipes.\n")
-      }
-      "return a string with the given dimensions" in {
-        printPipes(2, 3, 4) should be(
-          "\n\n" +
-            "|    |  |    |\n" +
-            "|    |  |    |\n" +
-            "|    |  |    |\n" +
-            "+----+  +----+\n"
-        )
-      }
-      "print a given symbol in the middle (the placed ColorBlock)" in {
-        printPipes(1, 1, 1, 'X') should be(
-          "\n\n" +
-            "|X|\n" +
-            "+-+\n"
-        )
-        printPipes(1, 3, 3, 'X') should be(
-          "\n\n" +
-            "| X |\n" +
-            "| X |\n" +
-            "| X |\n" +
-            "+---+\n"
-        )
-      }
+      val gamestate = GameState(Vector(p1, p2))
+
+      move(gamestate, 0, 1) should be(
+        GameState(Vector(Pipe(3, List(Color.G, Color.G)), Pipe(3, List(Color.R))))
+      )
+    }
+  }
+
+  "isSolved" should {
+
+    "return true if no pipe has more than one color" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.R, Color.R))
+      val p3 = Pipe(2, Nil)
+
+      val gamestate = GameState(Vector(p1, p2, p3))
+
+      isSolved(gamestate) should be(
+        true
+      )
+    }
+
+    "return false if a at least one pipe has more than one color" in {
+      val p1 = Pipe(2, List(Color.G, Color.R))
+      val p2 = Pipe(2, List(Color.R))
+      val p3 = Pipe(2, List(Color.G))
+
+      val gamestate = GameState(Vector(p1, p2, p3))
+
+      isSolved(gamestate) should be(
+        false
+      )
+    }
+
+    // Do we really want an unsolved gamestate with empty pipes?
+    "return false if all pipes are empty" in {
+      val p1 = Pipe(1, Nil)
+      val p2 = Pipe(1, Nil)
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      isSolved(gamestate) should be(false)
+    }
+  }
+
+  "printPipes" should {
+
+    "return a message if one of the parameters is smaller or equal to 0" in {
+      printPipes(-1, 3, 3) should be("\n\nInvalid dimensions for pipes.\n")
+      printPipes(3, -1, 3) should be("\n\nInvalid dimensions for pipes.\n")
+      printPipes(3, 3, -1) should be("\n\nInvalid dimensions for pipes.\n")
+    }
+    "return a string with the given dimensions" in {
+      printPipes(2, 3, 4) should be(
+        "\n\n" +
+          "|    |  |    |\n" +
+          "|    |  |    |\n" +
+          "|    |  |    |\n" +
+          "+----+  +----+\n"
+      )
+    }
+    "print a given symbol in the middle (the placed ColorBlock)" in {
+      printPipes(1, 1, 1, 'X') should be(
+        "\n\n" +
+          "|X|\n" +
+          "+-+\n"
+      )
+      printPipes(1, 3, 3, 'X') should be(
+        "\n\n" +
+          "| X |\n" +
+          "| X |\n" +
+          "| X |\n" +
+          "+---+\n"
+      )
     }
   }

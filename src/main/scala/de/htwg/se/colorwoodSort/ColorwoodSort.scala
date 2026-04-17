@@ -96,9 +96,9 @@ def move(state: GameState, from: Int, to: Int): GameState = {
 }
 
 // Checks every move if all pipes contains blocks of same color
-def isSolved(state: GameState): Boolean = {
-  true
-} // checks gamestate after each move operation
+def isSolved(state: GameState): Boolean =
+  state.pipes.exists(_.content.nonEmpty) &&
+    state.pipes.forall(pipe => pipe.content.isEmpty || pipe.content.distinct.size == 1)
 
 //support methods like topColor, canPour, isEmpty, isFull
 
@@ -133,32 +133,27 @@ def printPipe(height: Int = 2, width: Int = 1): String =
 def printPipes(pipeCount: Int, height: Int, width: Int = 1, symbol: Char = ' '): String =
   if (pipeCount <= 0 || height <= 0 || width <= 0) "\n\nInvalid dimensions for pipes.\n"
   else {
-    val left = width / 2 - 1
-    val right = width / 2 - 1 - left
-    val filling = " " * left + symbol + " " * right
+    val filling =
+      if (symbol == ' ') " " * width
+      else {
+        val left = (width - 1) / 2
+        val right = width - 1 - left
+        " " * left + symbol + " " * right
+      }
+
     val singleWall = "|" + filling + "|"
     val singleBottom = "+" + "-" * width + "+"
 
     var wallLine = ""
     var bottomLine = ""
-
     var i = 0
     while (i < pipeCount) {
       wallLine += singleWall
       bottomLine += singleBottom
-
-      if (i < pipeCount - 1) { // only between pipes, not after the last one
-        wallLine += "  "
-        bottomLine += "  "
-      }
-
+      if (i < pipeCount - 1) { wallLine += "  "; bottomLine += "  " }
       i += 1
     }
 
-    wallLine += "\n"
-    bottomLine += "\n"
+    "\n\n" + (wallLine + "\n") * height + bottomLine + "\n"
 
-    val body = wallLine * height
-
-    "\n\n" + body + bottomLine
   }
