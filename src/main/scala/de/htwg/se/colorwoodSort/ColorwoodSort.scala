@@ -34,6 +34,25 @@ case class Pipe(capacity: Int = 1, content: List[Color] = Nil) {
 
 case class GameState(pipes: Vector[Pipe])
 
+//gameState utility methods for TDD
+extension (state: GameState)
+  def allColors: List[Color] =
+    state.pipes.flatMap(_.content).toList.distinct
+
+extension (state: GameState)
+  def pipeHeight: Int =
+    require(state.pipes.nonEmpty)
+    state.pipes.head.capacity
+
+def countEmptyPipes(state: GameState): Int =
+  state.pipes.count(_.content.isEmpty)
+
+def countPipesWithColor(state: GameState, color: Color): Int =
+  state.pipes.count(pipe => pipe.content.contains(color))
+
+def countColorBlocks(state: GameState, color: Color): Int =
+  state.pipes.flatMap(_.content).count(_ == color)
+
 /** main method to run the game
   */
 object colorwoodSort {
@@ -42,7 +61,10 @@ object colorwoodSort {
 
   def main(args: Array[String]): Unit = {
 
-    print(printPipes(3, 3, 3))
+    // print(printPipes(3, 3, 3))
+
+    val state = generator(2, 3, List(Color.R, Color.G))
+    print(printGameState(state))
   }
 }
 
@@ -71,28 +93,45 @@ def move(state: GameState, from: Int, to: Int): GameState = {
 
   if (isValid(fromPipe, toPipe)) {
 
-    topColor(fromPipe) match // match is like 'if' but continues with called function return parameter
-      case Some(color) =>
+    val color = topColor(fromPipe).get // safe because of isValid check
 
-        // select blocks to move and determine how many can be moved
-        val selected = fromPipe.content.reverse.takeWhile(_ == color)
-        val same = selected.size
-        val space = toPipe.capacity - toPipe.content.size
-        val amount = math.min(same, space)
+    // select blocks to move and determine how many can be moved
+    val selected = fromPipe.content.reverse.takeWhile(_ == color)
+    val same = selected.size
+    val space = toPipe.capacity - toPipe.content.size
+    val amount = math.min(same, space)
 
-        // update pipes
-        val tmp = selected.take(amount)
-        val fromPipe2 = Pipe(fromPipe.capacity, fromPipe.content.dropRight(amount))
-        val toPipe2 = Pipe(toPipe.capacity, toPipe.content ++ tmp.reverse) // why tmp.reverse
+    // update pipes
+    val tmp = selected.take(amount)
+    val fromPipe2 = Pipe(fromPipe.capacity, fromPipe.content.dropRight(amount))
+    val toPipe2 = Pipe(toPipe.capacity, toPipe.content ++ tmp.reverse) // why tmp.reverse
 
-        // new GameState
-        val newPipes = state.pipes.updated(from, fromPipe2).updated(to, toPipe2)
-        GameState(newPipes)
-
-      case None => state // unnecessary because isValid already checks if fromPipe is empty
+    // new GameState
+    val newPipes = state.pipes.updated(from, fromPipe2).updated(to, toPipe2)
+    GameState(newPipes)
 
   } else state
 
+}
+
+def allShuffleMoves(state: GameState): List[(Int, Int)] =
+  (for {
+    from <- state.pipes.indices
+    to <- state.pipes.indices
+    if from != to
+    if state.pipes(from).content.nonEmpty
+    if state.pipes(to).content.size < state.pipes(to).capacity
+  } yield (from, to)).toList
+
+def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
+  val fromPipe = state.pipes(from)
+  val toPipe = state.pipes(to)
+
+  val block = fromPipe.content.last
+  val newFromPipe = Pipe(fromPipe.capacity, fromPipe.content.dropRight(1))
+  val newToPipe = Pipe(toPipe.capacity, toPipe.content :+ block)
+
+  GameState(state.pipes.updated(from, newFromPipe).updated(to, newToPipe))
 }
 
 // Checks every move if all pipes contains blocks of same color
@@ -155,5 +194,130 @@ def printPipes(pipeCount: Int, height: Int, width: Int, symbol: Char = ' '): Str
     }
 
     "\n\n" + (wallLine + "\n") * height + bottomLine + "\n"
-
   }
+
+def printGameState(state: GameState): String = {
+  val height = state.pipeHeight
+
+  val lines =
+    for (level <- (height - 1) to 0 by -1) yield {
+      state.pipes
+        .map { pipe =>
+          val content =
+            if (level < pipe.content.size)
+              pipe.content(level).toString
+            else " "
+
+          s"|$content|"
+        }
+        .mkString("  ")
+    }
+
+  val bottom =
+    state.pipes.map(_ => "+-+").mkString("  ")
+
+  "\n\n" + lines.mkString("\n") + "\n" + bottom + "\n"
+}
+
+def allValidMoves(state: GameState): List[(Int, Int)] =
+  (for {
+    from <- state.pipes.indices
+    to <- state.pipes.indices
+    if (from != to)
+  } yield (from, to)).toList
+
+def countMixedPipes(state: GameState): Int =
+  state.pipes.count(p => p.content.nonEmpty && p.content.distinct.size > 1)
+
+def score(state: GameState): Int =
+  countMixedPipes(state) * 10 - math.abs(countEmptyPipes(state) - 2) * 100
+
+def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int = 30): GameState = {
+  var currentState =
+    GameState(
+      colors.map(c => Pipe(pipeheight, List.fill(pipeheight)(c))).toVector ++
+        Vector.fill(2)(Pipe(pipeheight, Nil))
+    )
+
+  var stepsLeft = count
+  var lastMove: Option[(Int, Int)] = None
+
+  while (stepsLeft > 0) {
+    val moves = allShuffleMoves(currentState)
+
+    val noRedoMoves = moves.filter { case (from, to) =>
+      lastMove.forall { case (a, b) => !(from == b && to == a) }
+    }
+
+    val usableMoves =
+      if (noRedoMoves.nonEmpty) noRedoMoves
+      else moves
+
+    if (usableMoves.nonEmpty) {
+      val candidates = usableMoves.map { case (from, to) =>
+        val next = shuffleMove(currentState, from, to)
+        ((from, to), next)
+      }
+
+      val currentScore = countMixedPipes(currentState)
+
+      val betterOrEqual = candidates.filter { (_, s) =>
+        countMixedPipes(s) >= currentScore
+      }
+
+      val pool =
+        if (betterOrEqual.nonEmpty) betterOrEqual
+        else candidates
+
+      val chosen = pool(scala.util.Random.nextInt(pool.size))
+      currentState = chosen._2
+      lastMove = Some(chosen._1)
+    }
+
+    stepsLeft -= 1
+  }
+
+  forceEmptyTwoPipes(currentState)
+}
+
+def forceEmptyTwoPipes(state: GameState): GameState = {
+  val pipes = state.pipes
+
+  // Indizes der zwei kleinsten Pipes finden
+  val sorted = pipes.zipWithIndex.sortBy(_._1.content.size)
+  val emptyIdx1 = sorted(0)._2
+  val emptyIdx2 = sorted(1)._2
+
+  val toEmpty = Set(emptyIdx1, emptyIdx2)
+
+  // Alle Blöcke aus diesen Pipes einsammeln
+  val blocksToMove = toEmpty.toList.flatMap(i => pipes(i).content)
+
+  // Neue Pipes vorbereiten: die zwei werden leer
+  var newPipes = pipes.zipWithIndex.map { case (p, i) =>
+    if (toEmpty.contains(i)) Pipe(p.capacity, Nil)
+    else p
+  }.toVector
+
+  // Blöcke auf andere Pipes verteilen
+  for (block <- blocksToMove) {
+    // finde erste Pipe mit Platz (die nicht geleert wird)
+    val targetIndex = newPipes.indices.find { i =>
+      !toEmpty.contains(i) &&
+      newPipes(i).content.size < newPipes(i).capacity
+    }
+
+    targetIndex match {
+      case Some(i) =>
+        val p = newPipes(i)
+        newPipes = newPipes.updated(i, Pipe(p.capacity, p.content :+ block))
+      case None =>
+        // falls kein Platz mehr: einfach nichts tun (sollte selten passieren)
+        ()
+    }
+  }
+
+  // move empty pipes to the end
+  val (empty, filled) = newPipes.partition(_.content.isEmpty)
+  GameState((filled ++ empty).toVector)
+}

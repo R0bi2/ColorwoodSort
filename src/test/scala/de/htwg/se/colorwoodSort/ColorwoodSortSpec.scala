@@ -201,3 +201,221 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       )
     }
   }
+
+  "allValidMoves" should {
+    "return a tuple list of all valid moves for a given gamestate" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.R))
+      val p3 = Pipe(2, Nil)
+
+      val gamestate = GameState(Vector(p1, p2, p3))
+
+      allValidMoves(gamestate) should be(
+        List((0, 2), (1, 2))
+      )
+    }
+  }
+
+  "generator" should {
+    "generate given colors" in {
+
+      val state: GameState = generator(1, 1, List(Color.R))
+
+      state.allColors should be(
+        List(Color.R)
+      )
+    }
+
+    "generate given height" in {
+
+      val state = generator(2, 3, List(Color.R, Color.G))
+      state.pipeHeight should be(
+        3
+      )
+    }
+
+    "preserve the number of blocks for each color" in {
+      val colors = List(Color.R, Color.G)
+      val height = 3
+
+      val initial =
+        GameState(
+          colors.map(c => Pipe(height, List.fill(height)(c))).toVector ++
+            Vector.fill(2)(Pipe(height, Nil))
+        )
+
+      val generated = generator(2, height, colors, 30)
+
+      colors.foreach { c =>
+        countColorBlocks(generated, c) should be(countColorBlocks(initial, c))
+      }
+    }
+
+    "generate at least two empty pipes" in {
+      val state = generator(2, 3, List(Color.R, Color.G))
+      countEmptyPipes(state) should be(
+        2
+      )
+    }
+
+    "generate at least one mixed pipe" in {
+      val state = generator(2, 3, List(Color.R, Color.G), 30)
+      state.pipes.count(p => p.content.nonEmpty && p.content.distinct.size > 1) should be > 0
+    }
+  }
+
+  "allShuffleMoves" should {
+
+    "return all moves where from != to, fromPipe is not empty, and toPipe is not full" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.R))
+      val p3 = Pipe(2, Nil)
+
+      val gamestate = GameState(Vector(p1, p2, p3))
+
+      allShuffleMoves(gamestate) should be(
+        List((0, 1), (0, 2), (1, 2), (2, 1))
+      )
+    }
+
+    "not include moves from an empty pipe" in {
+      val p1 = Pipe(2, Nil)
+      val p2 = Pipe(2, List(Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      allShuffleMoves(gamestate) should be(
+        List((1, 0))
+      )
+    }
+
+    "not include moves to a full pipe" in {
+      val p1 = Pipe(2, List(Color.G))
+      val p2 = Pipe(2, List(Color.R, Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      allShuffleMoves(gamestate) should be(
+        List()
+      )
+    }
+
+    "not include moves where from == to" in {
+      val p1 = Pipe(2, List(Color.G))
+      val p2 = Pipe(2, Nil)
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      allShuffleMoves(gamestate) should be(
+        List((0, 1), (1, 0))
+      )
+    }
+  }
+
+  "shuffleMove" should {
+    "move one block from one pipe to another no matter what color" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      val newState = shuffleMove(gamestate, 0, 1)
+
+      newState should be(
+        GameState(Vector(Pipe(2, List(Color.G)), Pipe(2, List(Color.R, Color.G))))
+      )
+    }
+
+    "return no change to state if fromPipe is empty" in {
+      val p1 = Pipe(2, Nil)
+      val p2 = Pipe(2, List(Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      shuffleMove(gamestate, 0, 1) should be(
+        GameState(Vector(Pipe(2, Nil), Pipe(2, List(Color.R))))
+      )
+    }
+
+    "return no change to state if toPipe is full" in {
+      val p1 = Pipe(2, List(Color.G, Color.G))
+      val p2 = Pipe(2, List(Color.R, Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      shuffleMove(gamestate, 0, 1) should be(
+        GameState(Vector(Pipe(2, List(Color.G, Color.G)), Pipe(2, List(Color.R, Color.R))))
+      )
+    }
+
+    "return no change if from == to" in {
+      val p1 = Pipe(2, List(Color.G))
+      val p2 = Pipe(2, List(Color.R))
+
+      val gamestate = GameState(Vector(p1, p2))
+
+      shuffleMove(gamestate, 0, 0) should be(gamestate)
+    }
+
+  }
+
+  "forceEmptyTwoPipes" should {
+
+    "return a state with exactly two empty pipes" in {
+      val state = GameState(
+        Vector(
+          Pipe(3, List(Color.R, Color.G)),
+          Pipe(3, List(Color.G)),
+          Pipe(3, List(Color.R)),
+          Pipe(3, List(Color.G))
+        )
+      )
+
+      countEmptyPipes(forceEmptyTwoPipes(state)) should be(2)
+    }
+
+    "preserve the number of blocks for each color" in {
+      val state = GameState(
+        Vector(
+          Pipe(3, List(Color.R, Color.G)),
+          Pipe(3, List(Color.G)),
+          Pipe(3, List(Color.R)),
+          Pipe(3, List(Color.G))
+        )
+      )
+
+      val newState = forceEmptyTwoPipes(state)
+
+      countColorBlocks(newState, Color.R) should be(countColorBlocks(state, Color.R))
+      countColorBlocks(newState, Color.G) should be(countColorBlocks(state, Color.G))
+    }
+
+    "choose the two least filled pipes to empty" in {
+      val state = GameState(
+        Vector(
+          Pipe(3, List(Color.R, Color.R, Color.R)),
+          Pipe(3, List(Color.G)),
+          Pipe(3, List(Color.R)),
+          Pipe(3, List(Color.G, Color.G))
+        )
+      )
+
+      val newState = forceEmptyTwoPipes(state)
+
+      newState.pipes(1).content should be(Nil)
+      newState.pipes(2).content should be(Nil)
+    }
+
+    "not change the number of pipes" in {
+      val state = GameState(
+        Vector(
+          Pipe(3, List(Color.R, Color.G)),
+          Pipe(3, List(Color.G)),
+          Pipe(3, List(Color.R)),
+          Pipe(3, List(Color.G))
+        )
+      )
+
+      forceEmptyTwoPipes(state).pipes.size should be(state.pipes.size)
+    }
+  }
