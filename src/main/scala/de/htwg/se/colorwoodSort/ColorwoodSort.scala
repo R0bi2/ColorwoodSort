@@ -19,6 +19,9 @@ package de.htwg.se.colorwoodSort
  * Merksatz: Alles Komplexe ist nur Kombination dieser 10.
  */
 
+/** ------------------------------------------------------- Datastructure -------------------------------------------------------
+  */
+
 enum Color:
   case R, G, Y, B
 
@@ -28,45 +31,105 @@ case class ColorBlock(color: Color) // nicht zwingend nötig
 //case class Pipe(capacity: Int = 1, content: List[Color] = Nil)
 
 case class Pipe(capacity: Int = 1, content: List[Color] = Nil) {
+
   require(capacity > 0, "capacity must be > 0")
   require(content.size <= capacity, "too many elements")
 }
+//pipe utility methods
+extension (pipe: Pipe)
+  def isFull: Boolean =
+    pipe.content.size == pipe.capacity
+
+  def topColor: Option[Color] = {
+    if (pipe.content.isEmpty)
+      None
+    else
+      Some(pipe.content.last)
+  }
 
 case class GameState(pipes: Vector[Pipe])
-
 //gameState utility methods for TDD
 extension (state: GameState)
   def allColors: List[Color] =
     state.pipes.flatMap(_.content).toList.distinct
 
-extension (state: GameState)
   def pipeHeight: Int =
     require(state.pipes.nonEmpty)
     state.pipes.head.capacity
 
-def countEmptyPipes(state: GameState): Int =
-  state.pipes.count(_.content.isEmpty)
+  def countEmptyPipes: Int =
+    state.pipes.count(_.content.isEmpty)
 
-def countPipesWithColor(state: GameState, color: Color): Int =
-  state.pipes.count(pipe => pipe.content.contains(color))
+  def countColorBlocks(color: Color): Int =
+    state.pipes.flatMap(_.content).count(_ == color)
 
-def countColorBlocks(state: GameState, color: Color): Int =
-  state.pipes.flatMap(_.content).count(_ == color)
-
-/** main method to run the game
+/** ------------------------------------------------------ main method to run the game ----------------------------------------------
   */
 object colorwoodSort {
-
   val eol = "\n"
-
   def main(args: Array[String]): Unit = {
-
     // print(printPipes(3, 3, 3))
-
-    val state = generator(2, 3, List(Color.R, Color.G))
-    print(printGameState(state))
+    val state = generator(3, 2, List(Color.R, Color.G))
+    gameLoop(state)
   }
 }
+
+/** ------------------------------------------------------- Game Loop -------------------------------------------------------
+  */
+
+def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
+  val parts = input.trim.split("\\s+")
+  if (parts.length != 2) None
+  else {
+    val fromOpt = parts(0).toIntOption
+    val toOpt = parts(1).toIntOption
+    (fromOpt, toOpt) match {
+      case (Some(from1), Some(to1)) =>
+        val from = from1 - 1
+        val to = to1 - 1
+        if (from >= 0 && from < pipeCount && to >= 0 && to < pipeCount && from != to) Some((from, to))
+        else None
+      case _ => None
+    }
+  }
+}
+
+// r for redo action, q for quit
+def gameLoop(state: GameState): Unit = {
+  println(printGameState(state))
+
+  if (isSolved(state)) {
+    println(" You solved it!\n")
+    return
+  }
+
+  println("Enter move (from to), or q to quit:")
+
+  val input = scala.io.StdIn.readLine()
+
+  if (input == null || input.trim.equalsIgnoreCase("q")) {
+    return
+  }
+
+  parseMove(input, state.pipes.size) match {
+    case Some((from, to)) =>
+      val newState = move(state, from, to)
+
+      if (newState == state) {
+        println("Invalid move")
+        gameLoop(state)
+      } else {
+        gameLoop(newState)
+      }
+
+    case None =>
+      println("Invalid input")
+      gameLoop(state)
+  }
+}
+
+/** ------------------------------------------------------- Game Rules -------------------------------------------------------
+  */
 
 //handle over the game state or blocks does not care about empty or full pipes so better check the pipes
 //valid: colors match || Pipe empty, unvalid: colors dont match || pipe is full
@@ -111,64 +174,23 @@ def move(state: GameState, from: Int, to: Int): GameState = {
     GameState(newPipes)
 
   } else state
-
-}
-
-def allShuffleMoves(state: GameState): List[(Int, Int)] =
-  (for {
-    from <- state.pipes.indices
-    to <- state.pipes.indices
-    if from != to
-    if state.pipes(from).content.nonEmpty
-    if state.pipes(to).content.size < state.pipes(to).capacity
-  } yield (from, to)).toList
-
-def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
-  val fromPipe = state.pipes(from)
-  val toPipe = state.pipes(to)
-
-  val block = fromPipe.content.last
-  val newFromPipe = Pipe(fromPipe.capacity, fromPipe.content.dropRight(1))
-  val newToPipe = Pipe(toPipe.capacity, toPipe.content :+ block)
-
-  GameState(state.pipes.updated(from, newFromPipe).updated(to, newToPipe))
 }
 
 // Checks every move if all pipes contains blocks of same color
 def isSolved(state: GameState): Boolean =
   state.pipes.exists(_.content.nonEmpty) &&
-    state.pipes.forall(pipe => pipe.content.isEmpty || pipe.content.distinct.size == 1)
+    state.pipes.forall(pipe => pipe.content.isEmpty || (pipe.content.distinct.size == 1 && pipe.content.size == pipe.capacity))
 
-//support methods like topColor, canPour, isEmpty, isFull
-
-def isFull(pipe: Pipe): Boolean = {
-  pipe.content.size == pipe.capacity
-}
-
-def topColor(pipe: Pipe): Option[Color] = {
-  if (pipe.content.isEmpty)
-    None
-  else
-    Some(pipe.content.last)
-}
-
-/** pourable if pipe is not empty || pipe is not solved def canPour(pipe: Pipe): Boolean = {}
+/** ------------------------------------------------------- Generator -------------------------------------------------------
   */
 
+// printPipe and printPipes is old stuff, not used anymore
 def printPipe(height: Int = 2, width: Int = 1): String =
 
   val wall = "|" + " " * width + "|\n"
   val body = wall * height
   val bottom = "+" + "-" * width + "+\n"
   body + bottom
-
-/** should functions be entirely scalable? it doesnt make sense for the game to make a pipe wider than 1
-  *
-  * @param pipeCount
-  * @param height
-  * @param width
-  * @return
-  */
 def printPipes(pipeCount: Int, height: Int, width: Int, symbol: Char = ' '): String =
   if (pipeCount <= 0 || height <= 0 || width <= 0) "\n\nInvalid dimensions for pipes.\n"
   else {
@@ -216,21 +238,44 @@ def printGameState(state: GameState): String = {
   val bottom =
     state.pipes.map(_ => "+-+").mkString("  ")
 
-  "\n\n" + lines.mkString("\n") + "\n" + bottom + "\n"
+  val indices =
+    state.pipes.indices
+      .map(i => s" ${i + 1} ")
+      .mkString("  ")
+
+  "\n\n" + lines.mkString("\n") + "\n" + bottom + "\n" + indices + "\n"
 }
 
-def allValidMoves(state: GameState): List[(Int, Int)] =
+def allShuffleMoves(state: GameState): List[(Int, Int)] =
   (for {
     from <- state.pipes.indices
     to <- state.pipes.indices
-    if (from != to)
+    if from != to
+    fromPipe = state.pipes(from)
+    toPipe = state.pipes(to)
+    if fromPipe.content.nonEmpty
+    if !(fromPipe.isFull && fromPipe.content.distinct.size > 1)
+    if toPipe.content.size < toPipe.capacity
   } yield (from, to)).toList
+
+def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
+  val fromPipe = state.pipes(from)
+  val toPipe = state.pipes(to)
+
+  val block = fromPipe.content.last
+  val newFromPipe = Pipe(fromPipe.capacity, fromPipe.content.dropRight(1))
+  val newToPipe = Pipe(toPipe.capacity, toPipe.content :+ block)
+
+  GameState(state.pipes.updated(from, newFromPipe).updated(to, newToPipe))
+}
 
 def countMixedPipes(state: GameState): Int =
   state.pipes.count(p => p.content.nonEmpty && p.content.distinct.size > 1)
 
-def score(state: GameState): Int =
-  countMixedPipes(state) * 10 - math.abs(countEmptyPipes(state) - 2) * 100
+// This is a thing I tried
+// Score function for generator: more mixed pipes is better, but having more than 2 empty pipes is very bad (because we need exactly 2 empty pipes to solve the game)
+//def score(state: GameState): Int =
+//  countMixedPipes(state) * 10 - math.abs(state.countEmptyPipes - 2) * 100
 
 def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int = 30): GameState = {
   var currentState =
