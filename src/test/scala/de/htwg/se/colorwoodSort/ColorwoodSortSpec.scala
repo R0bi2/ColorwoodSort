@@ -43,8 +43,12 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
   }
 
   "isFull" should {
+
+    val p1 = Pipe(2, List(Color.G, Color.Y))
+    val p2 = Pipe(3, List(Color.G, Color.Y))
+    val p3 = Pipe(3, Nil)
+
     "return true if topmost element reaches capacity" in {
-      val p1 = Pipe(2, List(Color.G, Color.Y))
       isFull(p1) should be(true)
     }
 
@@ -296,7 +300,7 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       val gamestate = GameState(Vector(p1, p2, p3))
 
       allShuffleMoves(gamestate) should be(
-        List((1, 2))
+        List((0, 1), (0, 2), (1, 2))
       )
     }
 
@@ -355,14 +359,14 @@ class ColorwoodSortSpec extends AnyWordSpec with Matchers:
       )
     }
 
-    "not allow moves from a mixed pipe if it is full" in {
-      val p1 = Pipe(2, List(Color.G, Color.R)) // mixed, full -> not allowed
+    "allow moves from a mixed pipe even if it is full" in {
+      val p1 = Pipe(2, List(Color.G, Color.R)) // mixed, full -> now allowed
       val p2 = Pipe(2, Nil)
 
       val gamestate = GameState(Vector(p1, p2))
 
       allShuffleMoves(gamestate) should be(
-        List()
+        List((0, 1))
       )
     }
 

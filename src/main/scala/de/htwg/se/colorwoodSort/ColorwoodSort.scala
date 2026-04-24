@@ -23,7 +23,7 @@ package de.htwg.se.colorwoodSort
   */
 
 enum Color:
-  case R, G, Y, B
+  case R, G, Y, B, P
 
 case class ColorBlock(color: Color) // nicht zwingend nötig
 
@@ -69,7 +69,7 @@ object colorwoodSort {
   val eol = "\n"
   def main(args: Array[String]): Unit = {
     // print(printPipes(3, 3, 3))
-    val state = generator(3, 2, List(Color.R, Color.G))
+    val state = generator(2, 3, List(Color.R, Color.G, Color.Y))
     gameLoop(state)
   }
 }
@@ -96,7 +96,7 @@ def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
 
 // r for redo action, q for quit
 def gameLoop(state: GameState): Unit = {
-  println(printGameState(state))
+  println(printGameState(state)) // print current state
 
   if (isSolved(state)) {
     println(" You solved it!\n")
@@ -107,7 +107,7 @@ def gameLoop(state: GameState): Unit = {
 
   val input = scala.io.StdIn.readLine()
 
-  if (input == null || input.trim.equalsIgnoreCase("q")) {
+  if (input == null || input.trim.equalsIgnoreCase("q")) { // quit game
     return
   }
 
@@ -205,6 +205,7 @@ def printPipes(pipeCount: Int, height: Int, width: Int, symbol: Char = ' '): Str
     val singleWall = "|" + filling + "|"
     val singleBottom = "+" + "-" * width + "+"
 
+    // vars are not nice
     var wallLine = ""
     var bottomLine = ""
     var i = 0
@@ -254,7 +255,6 @@ def allShuffleMoves(state: GameState): List[(Int, Int)] =
     fromPipe = state.pipes(from)
     toPipe = state.pipes(to)
     if fromPipe.content.nonEmpty
-    if !(fromPipe.isFull && fromPipe.content.distinct.size > 1)
     if toPipe.content.size < toPipe.capacity
   } yield (from, to)).toList
 
