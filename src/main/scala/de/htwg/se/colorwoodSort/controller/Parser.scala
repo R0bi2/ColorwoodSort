@@ -1,9 +1,13 @@
 package de.htwg.se.colorwoodSort.controller
 
+import de.htwg.se.colorwoodSort.model.*
+
 /*
   takes players console input of color moves
  */
-def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
+
+private[controller] def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
+  // private[controller] def = visible for this package controller
   val parts = input.trim.split("\\s+")
   if (parts.length != 2) None
   else {
@@ -17,5 +21,16 @@ def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
         else None
       case _ => None
     }
+  }
+}
+
+private[controller] def parseColor(s: String): Color = {
+  s match {
+    case "R"   => Color.R
+    case "G"   => Color.G
+    case "Y"   => Color.Y
+    case "B"   => Color.B
+    case "P"   => Color.P
+    case other => throw new IllegalArgumentException(s"Unknown color: $other")
   }
 }

@@ -7,7 +7,6 @@ enum Color:
   case R, G, Y, B, P
 
 case class Pipe(capacity: Int = 1, content: List[Color] = Nil) {
-
   require(capacity > 0, "capacity must be > 0")
   require(content.size <= capacity, "too many elements")
 }

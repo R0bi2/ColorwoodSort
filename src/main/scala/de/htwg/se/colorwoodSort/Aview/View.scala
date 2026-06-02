@@ -1,14 +1,20 @@
-package de.htwg.se.colorwoodSort.view
+package de.htwg.se.colorwoodSort.Aview
 
 import de.htwg.se.colorwoodSort.controller.*
 import de.htwg.se.colorwoodSort.model.* //not perrfect but we need GameState and printGameState
 import de.htwg.se.colorwoodSort.util.Observer
 
-object View extends Observer[ControllerEvent] {
+class View(controller: Controller) extends Observer[ControllerEvent] {
 
+  controller.add(this)
+
+  // def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit =
   def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit =
-    Controller.add(this)
-    Controller.startGame(pipes, height, colorStrings, readInput)
+    controller.startGame(pipes, height, colorStrings, readInput)
+
+  // is def run() and def update not redundant?
+  // def run(): Unit =
+  //  startGame(3, 4, List("R", "G", "Y"))
 
   override def update(output: ControllerEvent): Unit = output match {
     case ControllerEvent.StateChanged(state) => println(printGameState(state))

@@ -7,6 +7,8 @@ trait Observable[T] {
   def add(s: Observer[T]): Unit =
     subscribers = subscribers :+ s
 
+  def remove(s: Observer[T]): Unit = subscribers = subscribers.filterNot(_ == s)
+
   def notifyObservers(value: T): Unit =
     subscribers.foreach(_.update(value))
 }
