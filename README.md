@@ -168,3 +168,23 @@ The following concepts cover a large portion of everyday Scala programming:
 
 > Everything complex is ultimately built from combinations of these basic building blocks.
 
+# SBT commands
+
+- `clean`  
+  Deletes all generated files in the target directory.
+
+- `compile`  
+  Compiles the main sources (in `src/main/scala` and `src/main/java` directories).
+
+- `test`  
+  Compiles and runs all tests.
+
+- `console`  
+  Starts the Scala interpreter with a classpath including the compiled sources and all dependencies.  
+  To return to sbt, type `:quit`, `Ctrl+D` (Unix), or `Ctrl+Z` (Windows).
+
+- `run <argument>*`  
+  Runs the main class for the project in the same virtual machine as sbt.
+
+- `package`  
+  Creates a JAR file containing the files in `src/main/resources` and the classes compiled from `src/main/scala` and `src/main/java`.
