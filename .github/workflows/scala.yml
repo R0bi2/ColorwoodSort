@@ -20,5 +20,8 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
       - name: Run tests and coverage
         run: sbt clean coverage test coverageReport
