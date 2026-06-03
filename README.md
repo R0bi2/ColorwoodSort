@@ -39,6 +39,9 @@ sbt console
 
 ## Test Coverage
 
+
+[![Coverage Status](https://coveralls.io/repos/github/R0bi2/ColorwoodSort/badge.svg?branch=main)](https://coveralls.io/github/R0bi2/ColorwoodSort?branch=main)
+
 Compile, run tests, and generate coverage data:
 
 ```bash
