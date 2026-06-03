@@ -25,3 +25,10 @@ jobs:
 
       - name: Run tests and coverage
         run: sbt clean coverage test coverageReport
+
+      - name: Upload Coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # scoverage speichert den Bericht standardmäßig genau in diesem Pfad:
+          path-to-lcov: target/scala-3.8.2/coverage-report/cobertura.xml
