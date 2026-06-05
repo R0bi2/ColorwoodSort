@@ -2,41 +2,76 @@ package de.htwg.se.colorwoodSort.controller
 
 import de.htwg.se.colorwoodSort.model.*
 import de.htwg.se.colorwoodSort.util.Observable
-import scala.annotation.tailrec
+import scala.compiletime.uninitialized
+
+// --- DAS STATE PATTERN ---
+
+// 1. Das gemeinsame Interface für alle Zustände
+sealed trait ControllerState {
+  def handleInput(input: String, controller: Controller): Unit
+}
+
+// 2. Zustand: Das Spiel läuft
+case object PlayingState extends ControllerState {
+  override def handleInput(input: String, controller: Controller): Unit = {
+    if input == null || input.trim.equalsIgnoreCase("q") then {
+      controller.notifyObservers(ControllerEvent.Message("Game quit."))
+      controller.workflowState = FinishedState
+    } else {
+      // Zug versuchen auszuführen
+      val newState = controller.executeMove(input, controller.gameState)
+
+      if newState == controller.gameState then {
+        controller.notifyObservers(ControllerEvent.Message("Invalid move or input"))
+      } else {
+        // Zug war erfolgreich, Status updaten und View benachrichtigen
+        controller.gameState = newState
+        controller.notifyObservers(ControllerEvent.StateChanged(controller.gameState))
+
+        // Prüfen, ob durch den Zug gewonnen wurde
+        if isSolved(controller.gameState) then {
+          controller.notifyObservers(ControllerEvent.Message("You solved it!"))
+          controller.workflowState = FinishedState
+        }
+      }
+    }
+  }
+}
+
+// 3. Zustand: Das Spiel ist vorbei (Gewonnen oder Abgebrochen)
+case object FinishedState extends ControllerState {
+  override def handleInput(input: String, controller: Controller): Unit = {
+    controller.notifyObservers(ControllerEvent.Message("Game is finished. Please restart."))
+  }
+}
+
+// --- DER CONTROLLER ---
 
 class Controller extends Observable[ControllerEvent] {
 
-  def startGame(pipes: Int, height: Int, colorStrings: List[String], readInput: () => String): Unit =
+  // Der Controller hält jetzt passiv zwei Dinge: Den Spielablauf-Status und die Spieldaten
+  var workflowState: ControllerState = PlayingState
+  var gameState: GameState = uninitialized
+
+  // Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
+  def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
     val colors = colorStrings.map(parseColor)
-    val state = generator(pipes, height, colors)
-    gameLoop(state, readInput)
+    gameState = generator(pipes, height, colors)
+    workflowState = PlayingState
+    notifyObservers(ControllerEvent.StateChanged(gameState)) // Start-Zustand printen
+  }
 
-  // tailrec is needed to avoid stack overflow for long games, but it also means we can't use a var to store the state, so we pass it as a parameter instead
-  @tailrec
-  private def gameLoop(state: GameState, readInput: () => String): Unit =
-    notifyObservers(ControllerEvent.StateChanged(state)) // print current state
+  // NEU: Diese Methode wird von deiner TUI aufgerufen, wenn der Nutzer etwas eintippt
+  def processInput(input: String): Unit = {
+    // Der Controller leitet den Input blind an den aktuellen Zustand weiter
+    workflowState.handleInput(input, this)
+  }
 
-    if isSolved(state) then notifyObservers(ControllerEvent.Message("You solved it!"))
-    else
-      val input = readInput()
-
-      if input == null || input.trim.equalsIgnoreCase("q") then notifyObservers(ControllerEvent.Message("Game quit."))
-      else
-        val newState = handleInput(input, state)
-        gameLoop(newState, readInput)
-
-  private def handleInput(input: String, state: GameState): GameState =
-    parseMove(input, state.pipes.size) match
-      case Some((from, to)) =>
-        val newState = move(state, from, to)
-
-        if newState == state then
-          notifyObservers(ControllerEvent.Message("Invalid move"))
-          state
-        else newState
-
-      case None =>
-        notifyObservers(ControllerEvent.Message("Invalid input"))
-        state
-
+  // Hilfsmethode, die deine alte Logik für das Bewegen der Röhren kapselt
+  def executeMove(input: String, state: GameState): GameState = {
+    parseMove(input, state.pipes.size) match {
+      case Some((from, to)) => move(state, from, to)
+      case None             => state
+    }
+  }
 }

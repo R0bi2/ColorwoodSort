@@ -1,28 +1,42 @@
 package de.htwg.se.colorwoodSort.Aview
 
 import de.htwg.se.colorwoodSort.controller.*
-import de.htwg.se.colorwoodSort.model.* //not perrfect but we need GameState and printGameState
+import de.htwg.se.colorwoodSort.model.*
 import de.htwg.se.colorwoodSort.util.Observer
+import scala.annotation.tailrec
 
 class View(controller: Controller) extends Observer[ControllerEvent] {
 
   controller.add(this)
 
-  // def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit =
-  def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit =
-    controller.startGame(pipes, height, colorStrings, readInput)
+  def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
+    // 1. Spiel im Controller starten (ohne readInput Parameter!)
+    controller.startGame(pipes, height, colorStrings)
 
-  // is def run() and def update not redundant?
-  // def run(): Unit =
-  //  startGame(3, 4, List("R", "G", "Y"))
+    // 2. Die Eingabeschleife der TUI anwerfen
+    inputLoop()
+  }
+
+  // Die TUI übernimmt jetzt die Kontrolle über die Eingabeschleife
+  @tailrec
+  private def inputLoop(): Unit = {
+    // Wenn der Controller meldet, dass das Spiel vorbei ist, brechen wir die Schleife ab
+    if (controller.workflowState == FinishedState) {
+      return
+    }
+
+    // Eingabe lesen und blind an den Controller schicken
+    val input = scala.io.StdIn.readLine("Enter move (from to), or q to quit: ")
+    controller.processInput(input)
+
+    // Nächster Schleifendurchlauf
+    inputLoop()
+  }
 
   override def update(output: ControllerEvent): Unit = output match {
     case ControllerEvent.StateChanged(state) => println(printGameState(state))
     case ControllerEvent.Message(text)       => println(text)
   }
-
-  def readInput(): String =
-    scala.io.StdIn.readLine("Enter move (from to), or q to quit: ")
 
   def printGameState(state: GameState): String = {
     val height = state.pipeHeight

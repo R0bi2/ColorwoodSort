@@ -34,3 +34,18 @@ def printPipes(pipeCount: Int, height: Int, width: Int): String =
   }
 
 printPipes(4, 4, 3)
+
+// Wir nehmen 'var' statt 'val', damit wir den Wert ändern dürfen.
+// Und wir nennen sie 'counter', damit sie sich nicht mit Zeile 7 beißt.
+
+var counter: Int = 5
+
+while (counter > 0) {
+  println(counter)
+  counter -= 1 // Das funktioniert jetzt wunderbar!
+}
+
+var c = 4
+var d = 3
+
+println(c + d)

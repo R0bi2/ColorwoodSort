@@ -61,6 +61,7 @@ tmp/               # Temporäre Arbeitsdateien/Ordner, die nur kurzzeitig existi
 # ScalaTest reports
 test-reports/      # Testergebnis-Berichte (z. B. von automatisierten Tests)
 
+#rendundant because they are included in target which is already cleared
 # Coverage reports
 coverage/          # Code-Coverage-Auswertung (welcher Code wurde getestet)
 .coverage/         # Versteckter Coverage-Ordner (Tool-spezifisch)

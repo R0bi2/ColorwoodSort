@@ -45,7 +45,7 @@ sbt console
 Compile, run tests, and generate coverage data:
 
 ```bash
-sbt clean compile test coverage
+sbt clean test coverageReport
 ```
 
 Generate coverage report:
