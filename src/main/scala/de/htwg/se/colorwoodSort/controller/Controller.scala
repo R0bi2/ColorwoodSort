@@ -51,13 +51,13 @@ case object FinishedState extends ControllerState {
 
 class Controller extends Observable[ControllerEvent] {
 
-  // Der Controller hält jetzt passiv zwei Dinge: Den Spielablauf-Status und die Spieldaten
+  // Task 7: Der Controller hält jetzt passiv zwei Dinge: Den Spielablauf-Status und die Spieldaten
   var workflowState: ControllerState = PlayingState
   var gameState: GameState = uninitialized
 
   var undoHistory: List[MoveCommand] = Nil // Task 8: Speichert ausgeführte Commands für Undo.
 
-  // Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
+  // Task 7: Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
   def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
     val colors = colorStrings.map(parseColor)
     gameState = generator(pipes, height, colors)
@@ -66,7 +66,7 @@ class Controller extends Observable[ControllerEvent] {
     notifyObservers(ControllerEvent.StateChanged(gameState)) // Start-Zustand printen
   }
 
-  // NEU: Diese Methode wird von deiner TUI aufgerufen, wenn der Nutzer etwas eintippt
+  // Task 7: Diese Methode wird von deiner TUI aufgerufen, wenn der Nutzer etwas eintippt
   def processInput(input: String): Unit = {
     // Der Controller leitet den Input blind an den aktuellen Zustand weiter
     workflowState.handleInput(input, this)
@@ -74,7 +74,7 @@ class Controller extends Observable[ControllerEvent] {
 
   // Task 8: Erstellt einen MoveCommand und speichert ihn nur, wenn der Zug gültig war.
   def executeMove(input: String, state: GameState): GameState = {
-    parseMove(input, state.pipes.size) match {
+    parseMove(input, state.pipes.size) match { // Task 8: Try Monade inside parseMove
       case Some((from, to)) =>
         val command = MoveCommand(from, to, state)
         val newState = command.doStep(state)
