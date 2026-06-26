@@ -54,7 +54,8 @@ class Controller extends Observable[ControllerEvent] {
   // Der Controller hält jetzt passiv zwei Dinge: Den Spielablauf-Status und die Spieldaten
   var workflowState: ControllerState = PlayingState
   var gameState: GameState = uninitialized
-  var undoHistory: List[MoveCommand] = Nil
+
+  var undoHistory: List[MoveCommand] = Nil // Task 8: Speichert ausgeführte Commands für Undo.
 
   // Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
   def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
@@ -71,18 +72,21 @@ class Controller extends Observable[ControllerEvent] {
     workflowState.handleInput(input, this)
   }
 
-  // Hilfsmethode, die deine alte Logik für das Bewegen der Röhren kapselt
+  // Task 8: Erstellt einen MoveCommand und speichert ihn nur, wenn der Zug gültig war.
   def executeMove(input: String, state: GameState): GameState = {
     parseMove(input, state.pipes.size) match {
       case Some((from, to)) =>
         val command = MoveCommand(from, to, state)
         val newState = command.doStep(state)
-        if newState != state then undoHistory = command :: undoHistory
+        if newState != state then
+          undoHistory =
+            command :: undoHistory // Task 8: Wenn sich der Spielstand geändert hat, war der Zug gültig und kommt auf den Undo-Stapel.
         newState
       case None => state
     }
   }
 
+  // Task 8: Macht den letzten gespeicherten MoveCommand rückgängig.
   def undo(): Unit = {
     undoHistory match {
       case lastCommand :: rest =>
