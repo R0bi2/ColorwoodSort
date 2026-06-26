@@ -17,6 +17,8 @@ case object PlayingState extends ControllerState {
     if input == null || input.trim.equalsIgnoreCase("q") then {
       controller.notifyObservers(ControllerEvent.Message("Game quit."))
       controller.workflowState = FinishedState
+    } else if input.trim.equalsIgnoreCase("u") || input.trim.equalsIgnoreCase("undo") then { // Task 8: implement undo
+      controller.undo()
     } else {
       // Zug versuchen auszuführen
       val newState = controller.executeMove(input, controller.gameState)
@@ -52,12 +54,14 @@ class Controller extends Observable[ControllerEvent] {
   // Der Controller hält jetzt passiv zwei Dinge: Den Spielablauf-Status und die Spieldaten
   var workflowState: ControllerState = PlayingState
   var gameState: GameState = uninitialized
+  var undoHistory: List[MoveCommand] = Nil
 
   // Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
   def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
     val colors = colorStrings.map(parseColor)
     gameState = generator(pipes, height, colors)
     workflowState = PlayingState
+    undoHistory = Nil
     notifyObservers(ControllerEvent.StateChanged(gameState)) // Start-Zustand printen
   }
 
@@ -70,8 +74,23 @@ class Controller extends Observable[ControllerEvent] {
   // Hilfsmethode, die deine alte Logik für das Bewegen der Röhren kapselt
   def executeMove(input: String, state: GameState): GameState = {
     parseMove(input, state.pipes.size) match {
-      case Some((from, to)) => move(state, from, to)
-      case None             => state
+      case Some((from, to)) =>
+        val command = MoveCommand(from, to, state)
+        val newState = command.doStep(state)
+        if newState != state then undoHistory = command :: undoHistory
+        newState
+      case None => state
+    }
+  }
+
+  def undo(): Unit = {
+    undoHistory match {
+      case lastCommand :: rest =>
+        gameState = lastCommand.undoStep(gameState)
+        undoHistory = rest
+        notifyObservers(ControllerEvent.StateChanged(gameState))
+      case Nil =>
+        notifyObservers(ControllerEvent.Message("Nothing to undo."))
     }
   }
 }

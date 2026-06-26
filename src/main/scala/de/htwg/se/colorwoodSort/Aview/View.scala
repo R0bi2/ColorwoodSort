@@ -26,7 +26,7 @@ class View(controller: Controller) extends Observer[ControllerEvent] {
     }
 
     // Eingabe lesen und blind an den Controller schicken
-    val input = scala.io.StdIn.readLine("Enter move (from to), or q to quit: ")
+    val input = scala.io.StdIn.readLine("Enter move (from to), u for undo, or q to quit: ")
     controller.processInput(input)
 
     // Nächster Schleifendurchlauf
