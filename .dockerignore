@@ -1,0 +1,9 @@
+target/
+project/target/
+project/project/
+.git/
+.bsp/
+.idea/
+.vscode/
+*.png
+*.md

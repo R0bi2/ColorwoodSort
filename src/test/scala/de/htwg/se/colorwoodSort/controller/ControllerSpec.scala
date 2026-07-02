@@ -32,7 +32,8 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       controller.startGame(4, 2, List("R", "G"))
 
       controller.workflowState shouldBe PlayingState
-      controller.undoHistory shouldBe Nil
+      controller.canUndo shouldBe false
+      controller.canRedo shouldBe false
       controller.gameState.pipes.size shouldBe 4
       observer.events.last shouldBe ControllerEvent.StateChanged(controller.gameState)
     }
@@ -60,7 +61,52 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       controller.processInput("u")
 
       controller.gameState shouldBe oldState
-      controller.undoHistory shouldBe Nil
+      controller.canUndo shouldBe false
+    }
+
+    "process redo input to restore an undone move" in {
+      val controller = Controller()
+      val oldState = testState
+
+      controller.gameState = oldState
+      controller.processInput("1 2")
+      val movedState = controller.gameState
+      movedState should not be oldState
+
+      controller.processInput("u")
+      controller.gameState shouldBe oldState
+
+      controller.processInput("r")
+      controller.gameState shouldBe movedState
+      controller.canRedo shouldBe false
+      controller.canUndo shouldBe true
+    }
+
+    "redo nothing when redo stack is empty" in {
+      val controller = Controller()
+      val observer = TestObserver()
+      controller.add(observer)
+      val oldState = testState
+      controller.gameState = oldState
+
+      controller.redo()
+
+      controller.gameState shouldBe oldState
+      observer.events should contain(ControllerEvent.Message("Nothing to redo."))
+    }
+
+    "clear the redo stack when a new move is made after an undo" in {
+      val controller = Controller()
+      val oldState = testState
+
+      controller.gameState = oldState
+      controller.processInput("1 2")
+      controller.processInput("u")
+      controller.canRedo shouldBe true
+
+      // Ein neuer gültiger Zug muss die Redo-Historie verwerfen.
+      controller.processInput("1 2")
+      controller.canRedo shouldBe false
     }
 
     "process invalid input without changing the gameState" in {
@@ -73,7 +119,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       controller.processInput("abc")
 
       controller.gameState shouldBe oldState
-      controller.undoHistory shouldBe Nil
+      controller.canUndo shouldBe false
       observer.events should contain(ControllerEvent.Message("Invalid move or input"))
     }
 
@@ -85,7 +131,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       controller.processInput("1 2")
 
       controller.gameState should not be oldState
-      controller.undoHistory.size shouldBe 1
+      controller.canUndo shouldBe true
     }
 
     "detect when the game is solved after a move" in {
@@ -117,7 +163,7 @@ class ControllerSpec extends AnyWordSpec with Matchers {
       observer.events should contain(ControllerEvent.Message("Game is finished. Please restart."))
     }
 
-    "undo nothing when undoHistory is empty" in {
+    "undo nothing when the undo stack is empty" in {
       val controller = Controller()
       val observer = TestObserver()
       controller.add(observer)

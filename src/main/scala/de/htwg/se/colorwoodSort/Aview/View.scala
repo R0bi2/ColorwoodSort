@@ -1,11 +1,14 @@
 package de.htwg.se.colorwoodSort.Aview
 
+import com.google.inject.Inject
 import de.htwg.se.colorwoodSort.controller.*
 import de.htwg.se.colorwoodSort.model.*
 import de.htwg.se.colorwoodSort.util.Observer
 import scala.annotation.tailrec
 
-class View(controller: Controller) extends Observer[ControllerEvent] {
+// Task 10: Die TUI kennt nur noch das ControllerInterface, nicht die konkrete Controller-Klasse
+// Dependency Injection: Der Controller wird von Guice in den Konstruktor injiziert
+class View @Inject() (controller: ControllerInterface) extends Observer[ControllerEvent] {
 
   controller.add(this)
 
@@ -21,12 +24,13 @@ class View(controller: Controller) extends Observer[ControllerEvent] {
   @tailrec
   private def inputLoop(): Unit = {
     // Wenn der Controller meldet, dass das Spiel vorbei ist, brechen wir die Schleife ab
-    if (controller.workflowState == FinishedState) {
+    // (Task 10: ueber das Interface-Merkmal isFinished statt des inneren workflowState)
+    if (controller.isFinished) {
       return
     }
 
     // Eingabe lesen und blind an den Controller schicken
-    val input = scala.io.StdIn.readLine("Enter move (from to), u for undo, or q to quit: ")
+    val input = scala.io.StdIn.readLine("Enter move (from to), u for undo, r for redo, or q to quit: ")
     controller.processInput(input)
 
     // Nächster Schleifendurchlauf

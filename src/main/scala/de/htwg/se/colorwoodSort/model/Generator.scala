@@ -3,7 +3,8 @@ package de.htwg.se.colorwoodSort.model
 /** ------------------------------------------------------- Generator -------------------------------------------------------
   */
 
-def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int = 30): GameState = {
+// Task 10: private[model] kapselt die inneren Abläufe; Zugriff von aussen nur ueber GeneratorStrategy
+private[model] def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int = 30): GameState = {
   var currentState =
     GameState(
       colors.map(c => Pipe(pipeheight, List.fill(pipeheight)(c))).toVector ++
@@ -51,7 +52,7 @@ def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int =
   forceEmptyTwoPipes(currentState)
 }
 
-def forceEmptyTwoPipes(state: GameState): GameState = {
+private[model] def forceEmptyTwoPipes(state: GameState): GameState = {
   val pipes = state.pipes
 
   // Indizes der zwei kleinsten Pipes finden
@@ -98,7 +99,7 @@ def forceEmptyTwoPipes(state: GameState): GameState = {
 //def score(state: GameState): Int =
 //  countMixedPipes(state) * 10 - math.abs(state.countEmptyPipes - 2) * 100
 
-def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
+private[model] def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
   val fromPipe = state.pipes(from)
   val toPipe = state.pipes(to)
 

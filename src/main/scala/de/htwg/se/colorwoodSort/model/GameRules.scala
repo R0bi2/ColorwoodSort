@@ -6,7 +6,8 @@ package de.htwg.se.colorwoodSort.model
 //handle over the game state or blocks does not care about empty or full pipes so better check the pipes
 //valid: colors match || Pipe empty, unvalid: colors dont match || pipe is full
 
-def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean = {
+// Task 10: private[model] kapselt die inneren Abläufe; Zugriff von aussen nur ueber GameRulesInterface
+private[model] def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean = {
 
   if (fromPipe.content.isEmpty) false
   else if (toPipe.content.isEmpty) true
@@ -22,7 +23,7 @@ def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean = {
   *
   * How do I adress pipes? I dont have any Gamestate structure yet
   */
-def move(state: GameState, from: Int, to: Int): GameState = {
+private[model] def move(state: GameState, from: Int, to: Int): GameState = {
   val fromPipe = state.pipes(from)
   val toPipe = state.pipes(to)
 
@@ -49,6 +50,6 @@ def move(state: GameState, from: Int, to: Int): GameState = {
 }
 
 // Checks every move if all pipes contains blocks of same color
-def isSolved(state: GameState): Boolean =
+private[model] def isSolved(state: GameState): Boolean =
   state.pipes.exists(_.content.nonEmpty) &&
     state.pipes.forall(pipe => pipe.content.isEmpty || (pipe.content.distinct.size == 1 && pipe.content.size == pipe.capacity))

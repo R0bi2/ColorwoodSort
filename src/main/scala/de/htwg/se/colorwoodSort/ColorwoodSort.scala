@@ -1,4 +1,5 @@
 package de.htwg.se.colorwoodSort
+import com.google.inject.Guice
 import de.htwg.se.colorwoodSort.model.*
 import de.htwg.se.colorwoodSort.controller.*
 import de.htwg.se.colorwoodSort.Aview.*
@@ -9,8 +10,12 @@ import de.htwg.se.colorwoodSort.Aview.*
 // main
 object colorwoodSort {
   def main(args: Array[String]): Unit =
-    val controller = new Controller()
-    val tui = new View(controller)
+    // Dependency Injection: Der Injector baut den Objektgraphen anhand des Moduls auf.
+    // Kein `new Controller()` mehr in der Anwendung - Guice injiziert den (Singleton-)Controller
+    // in GUI und TUI, dadurch beobachten beide Views automatisch dieselbe Instanz.
+    val injector = Guice.createInjector(new ColorwoodSortModule)
+    val gui = injector.getInstance(classOf[Gui])
+    val tui = injector.getInstance(classOf[View])
     tui.startGame(3, 4, List("R", "G", "Y"))
 }
 
