@@ -3,10 +3,17 @@ package de.htwg.se.colorwoodSort.controller
 import de.htwg.se.colorwoodSort.model.*
 import scala.util.{Try, Success, Failure}
 
-/*
-  takes players console input of color moves
- */
+/** Parst Nutzereingaben fuer Zuege und Farben.
+  *
+  * Nur innerhalb des Controller-Pakets sichtbar (`private[controller]`).
+  */
 
+/** Wandelt eine Zugeingabe wie `"2 4"` in Pipe-Indizes `(1, 3)` um.
+  *
+  * Die Eingabe ist 1-basiert (Pipe 1, 2, 3, ...), intern wird 0-basiert gearbeitet.
+  * Ungueltige Eingaben (Buchstaben, gleiche Pipe, ausserhalb des Bereichs) liefern `None`.
+  * Nutzt die `Try`-Monade fuer sichere Integer-Konvertierung.
+  */
 private[controller] def parseMove(input: String, pipeCount: Int): Option[(Int, Int)] = {
   val parts = input.trim.split("\\s+")
   if (parts.length != 2) None
@@ -28,6 +35,7 @@ private[controller] def parseMove(input: String, pipeCount: Int): Option[(Int, I
   }
 }
 
+/** Wandelt einen Farb-String (z. B. `"R"`) in das [[de.htwg.se.colorwoodSort.model.Color]]-Enum. */
 private[controller] def parseColor(s: String): Color = {
   s match {
     case "R"   => Color.R

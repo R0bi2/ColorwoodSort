@@ -1,9 +1,18 @@
 package de.htwg.se.colorwoodSort.model
 
-/** ------------------------------------------------------- Generator -------------------------------------------------------
+/** ------------------------------------------------------- Generator (intern) -------------------------------------------------------
+  *
+  * Erzeugt durchmischte Startaufstellungen fuer das Puzzle.
+  * Zugriff von aussen nur ueber [[GeneratorStrategy]] (Strategy Pattern).
   */
 
-// Task 10: private[model] kapselt die inneren Abläufe; Zugriff von aussen nur ueber GeneratorStrategy
+/** Erzeugt einen gemischten [[GameState]] durch wiederholtes Shuffeln.
+  *
+  * @param pipeCount  Anzahl Pipes (Farbpipes + 2 leere)
+  * @param pipeheight Kapazitaet jeder Pipe
+  * @param colors     verwendete Farben
+  * @param count      Anzahl Shuffle-Schritte (mehr = schwerer)
+  */
 private[model] def generator(pipeCount: Int, pipeheight: Int, colors: List[Color], count: Int = 30): GameState = {
   var currentState =
     GameState(
@@ -17,13 +26,7 @@ private[model] def generator(pipeCount: Int, pipeheight: Int, colors: List[Color
   while (stepsLeft > 0) {
     val moves = allShuffleMoves(currentState)
 
-    val noRedoMoves = moves.filter { case (from, to) =>
-      lastMove.forall { case (a, b) => !(from == b && to == a) }
-    }
-
-    val usableMoves =
-      if (noRedoMoves.nonEmpty) noRedoMoves
-      else moves
+    val usableMoves = nonReversingMoves(moves, lastMove)
 
     if (usableMoves.nonEmpty) {
       val candidates = usableMoves.map { case (from, to) =>
@@ -31,15 +34,7 @@ private[model] def generator(pipeCount: Int, pipeheight: Int, colors: List[Color
         ((from, to), next)
       }
 
-      val currentScore = countMixedPipes(currentState)
-
-      val betterOrEqual = candidates.filter { (_, s) =>
-        countMixedPipes(s) >= currentScore
-      }
-
-      val pool =
-        if (betterOrEqual.nonEmpty) betterOrEqual
-        else candidates
+      val pool = preferMixingCandidates(candidates, countMixedPipes(currentState))
 
       val chosen = pool(scala.util.Random.nextInt(pool.size))
       currentState = chosen._2
@@ -52,6 +47,35 @@ private[model] def generator(pipeCount: Int, pipeheight: Int, colors: List[Color
   forceEmptyTwoPipes(currentState)
 }
 
+/** Filtert Zuege heraus, die den letzten Shuffle-Zug direkt rueckgaengig machen wuerden.
+  * Faellt auf alle Zuege zurueck, wenn sonst nichts uebrig bleibt.
+  */
+private[model] def nonReversingMoves(
+    moves: List[(Int, Int)],
+    lastMove: Option[(Int, Int)]
+): List[(Int, Int)] = {
+  val noRedoMoves = moves.filter { case (from, to) =>
+    lastMove.forall { case (a, b) => !(from == b && to == a) }
+  }
+  if (noRedoMoves.nonEmpty) noRedoMoves
+  else moves
+}
+
+/** Bevorzugt Kandidaten-Zuege, die die Durchmischung halten oder verbessern.
+  * Faellt auf alle Kandidaten zurueck, wenn keiner das Kriterium erfuellt.
+  */
+private[model] def preferMixingCandidates(
+    candidates: List[((Int, Int), GameState)],
+    currentScore: Int
+): List[((Int, Int), GameState)] = {
+  val betterOrEqual = candidates.filter { (_, s) =>
+    countMixedPipes(s) >= currentScore
+  }
+  if (betterOrEqual.nonEmpty) betterOrEqual
+  else candidates
+}
+
+/** Stellt sicher, dass genau zwei Pipes leer sind (Spielregel) und sortiert leere Pipes ans Ende. */
 private[model] def forceEmptyTwoPipes(state: GameState): GameState = {
   val pipes = state.pipes
 
@@ -99,6 +123,7 @@ private[model] def forceEmptyTwoPipes(state: GameState): GameState = {
 //def score(state: GameState): Int =
 //  countMixedPipes(state) * 10 - math.abs(state.countEmptyPipes - 2) * 100
 
+/** Fuehrt einen einzelnen Shuffle-Zug aus (verschiebt den obersten Block). */
 private[model] def shuffleMove(state: GameState, from: Int, to: Int): GameState = {
   val fromPipe = state.pipes(from)
   val toPipe = state.pipes(to)

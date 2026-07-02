@@ -16,6 +16,9 @@ lazy val root = project
 
     // bonuspunkt
     coverageExcludedPackages := ".*TicTacToe.*",
+    // Von der Coverage ausgenommen: Swing-GUI (Rendering/Fenster nicht unit-testbar)
+    // und der Main-Einstiegspunkt (startet die blockierende Eingabeschleife)
+    coverageExcludedFiles := ".*\\/Aview\\/Gui;.*\\/colorwoodSort\\/ColorwoodSort",
 
     // Docker-Deployment: sbt-assembly baut ein Fat-Jar mit allen Abhaengigkeiten
     assembly / mainClass := Some("de.htwg.se.colorwoodSort.colorwoodSort"),

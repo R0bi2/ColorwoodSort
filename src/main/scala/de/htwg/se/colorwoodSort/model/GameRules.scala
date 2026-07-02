@@ -1,27 +1,27 @@
 package de.htwg.se.colorwoodSort.model
 
-/** ------------------------------------------------------- Game Rules -------------------------------------------------------
+/** ------------------------------------------------------- Spielregeln (intern) -------------------------------------------------------
+  *
+  * Die eigentliche Regel-Logik: Zugpruefung, Ausfuehrung und Gewinnerkennung.
+  * Alle Funktionen sind `private[model]` gekapselt — Zugriff von aussen nur ueber
+  * [[GameRulesInterface]] / [[GameRules]].
   */
 
-//handle over the game state or blocks does not care about empty or full pipes so better check the pipes
-//valid: colors match || Pipe empty, unvalid: colors dont match || pipe is full
-
-// Task 10: private[model] kapselt die inneren Abläufe; Zugriff von aussen nur ueber GameRulesInterface
-private[model] def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean = {
-
-  if (fromPipe.content.isEmpty) false
-  else if (toPipe.content.isEmpty) true
-  else if (isFull(toPipe)) false
-  else if (topColor(fromPipe) != topColor(toPipe)) false
-  else if (topColor(fromPipe) == topColor(toPipe)) true
-  else false
-
-}
-
-/** change Gamestate by moving Blocks from pipe 'fromPipe' to pipe 'toPipe' if there are more Blocks of the same color beneath the selected
-  * then they are selected as well
+/** Prueft, ob ein Zug von `fromPipe` nach `toPipe` regelkonform ist.
   *
-  * How do I adress pipes? I dont have any Gamestate structure yet
+  * Gueltig wenn: Quelle nicht leer, Ziel hat Platz, Ziel leer oder gleiche oberste Farbe.
+  */
+private[model] def isValid(fromPipe: Pipe, toPipe: Pipe): Boolean =
+  (topColor(fromPipe), topColor(toPipe)) match {
+    case (None, _)              => false // Quelle leer -> nichts zu ziehen
+    case (_, None)              => true  // Ziel leer   -> immer erlaubt
+    case (Some(from), Some(to)) => !isFull(toPipe) && from == to // Platz + gleiche Farbe
+  }
+
+/** Fuehrt einen Zug aus und liefert den neuen Spielstand.
+  *
+  * Wenn mehrere Bloecke derselben Farbe oben liegen, werden sie als Gruppe verschoben
+  * (begrenzt durch freien Platz in der Ziel-Pipe). Ungueltige Zuege liefern den alten State.
   */
 private[model] def move(state: GameState, from: Int, to: Int): GameState = {
   val fromPipe = state.pipes(from)
@@ -49,7 +49,7 @@ private[model] def move(state: GameState, from: Int, to: Int): GameState = {
   } else state
 }
 
-// Checks every move if all pipes contains blocks of same color
+/** Prueft, ob das Puzzle geloest ist: jede Pipe leer oder einfarbig und voll. */
 private[model] def isSolved(state: GameState): Boolean =
   state.pipes.exists(_.content.nonEmpty) &&
     state.pipes.forall(pipe => pipe.content.isEmpty || (pipe.content.distinct.size == 1 && pipe.content.size == pipe.capacity))

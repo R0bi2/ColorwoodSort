@@ -8,6 +8,13 @@ import scala.annotation.tailrec
 
 // Task 10: Die TUI kennt nur noch das ControllerInterface, nicht die konkrete Controller-Klasse
 // Dependency Injection: Der Controller wird von Guice in den Konstruktor injiziert
+
+/** Terminal-UI (Text User Interface) des Spiels.
+  *
+  * Implementiert [[de.htwg.se.colorwoodSort.util.Observer]] und registriert sich beim Controller.
+  * Liest Eingaben von der Konsole und leitet sie an `processInput` weiter.
+  * Zeigt Spielstand und Meldungen als ASCII-Ausgabe an.
+  */
 class View @Inject() (controller: ControllerInterface) extends Observer[ControllerEvent] {
 
   controller.add(this)

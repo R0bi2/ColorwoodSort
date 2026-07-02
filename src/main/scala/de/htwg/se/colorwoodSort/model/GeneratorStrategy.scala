@@ -11,6 +11,14 @@ package de.htwg.se.colorwoodSort.model
   */
 
 trait GeneratorStrategy {
+
+  /** Erzeugt einen neuen, gemischten Spielzustand fuer die gegebenen Parameter.
+    *
+    * @param pipeCount  Anzahl der Pipes (inklusive leerer Pipes).
+    * @param pipeHeight Kapazitaet jeder Pipe.
+    * @param colors     Liste der im Spiel verwendeten Farben.
+    * @return           Initialer [[GameState]] mit durchmischten Farben.
+    */
   def generate(pipeCount: Int, pipeHeight: Int, colors: List[Color]): GameState
 }
 
