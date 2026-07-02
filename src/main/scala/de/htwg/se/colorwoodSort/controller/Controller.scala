@@ -57,10 +57,20 @@ class Controller extends Observable[ControllerEvent] {
 
   var undoHistory: List[MoveCommand] = Nil // Task 8: Speichert ausgeführte Commands für Undo.
 
+  // Strategy Pattern: Der Controller kennt nur das GeneratorStrategy-Interface.
+  // Der konkrete Schwierigkeitsgrad kann von außen ausgetauscht werden.
+  var generatorStrategy: GeneratorStrategy = MediumGenerator
+
   // Task 7: Die Start-Methode braucht keine readInput-Funktion mehr und ruft keine Schleife mehr auf
-  def startGame(pipes: Int, height: Int, colorStrings: List[String]): Unit = {
+  def startGame(
+      pipes: Int,
+      height: Int,
+      colorStrings: List[String],
+      strategy: GeneratorStrategy = generatorStrategy
+  ): Unit = {
+    generatorStrategy = strategy
     val colors = colorStrings.map(parseColor)
-    gameState = generator(pipes, height, colors)
+    gameState = generatorStrategy.generate(pipes, height, colors)
     workflowState = PlayingState
     undoHistory = Nil
     notifyObservers(ControllerEvent.StateChanged(gameState)) // Start-Zustand printen
